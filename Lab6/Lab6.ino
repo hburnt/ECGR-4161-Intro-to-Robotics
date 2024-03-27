@@ -117,14 +117,9 @@ void reverse(float travel_dist){
 void driveStraight() {
   resetLeftEncoderCnt();  // Reset Left Encoder Count
   resetRightEncoderCnt(); // Reset Right Encoder Count
-  
-  bool hitObstacle = false;
 
   uint16_t leftPulse = 0;   // Total amount of left encoder pulses received
   uint16_t rightPulse = 0;  // Total amount of right encoder pulses received
-
-  bool frontRightBumperPressed = false;
-  bool frontLeftBumperPressed = false;
   
   enableMotor(BOTH_MOTORS);
   setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
@@ -132,57 +127,10 @@ void driveStraight() {
   setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
   setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
   
-  while (hitObstacle == false) {    // Check Encoders against target pulse count
-    
+  while (true) {
     leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
     rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
-
-    /* Loop through all bump switches to see if any are pressed */
-    for (int x = 0; x < TOTAL_BP_SW; x++) {
-      /* Check if bump switch was pressed */
-      if (isBumpSwitchPressed(x)) {
-        // Stop the motors
-        disableMotor(BOTH_MOTORS);
-        delay(DELAY_MS);
-
-        reverse(5.08);
-        
-        if(frontRightBumperPressed && frontLeftBumperPressed){
-          hitObstacle = true;
-          disableMotor(BOTH_MOTORS);
-          delay(DELAY_MS);
-          return;
-        }
-
-        // Rotate based on which bump sensor is pressed
-        switch(x) {
-          case 0:
-            rotate(CW, 52); // Rotate counterclockwise 90 degrees
-            break;
-          case 1:
-            rotate(CW, 34); // Rotate counterclockwise 45 degrees
-            break;
-          case 2:
-            rotate(CW, 15); // Rotate clockwise 45 degrees
-            frontRightBumperPressed = true;
-            break;
-          case 3:
-            rotate(CCW, 15); // Rotate clockwise 90 degrees
-            frontLeftBumperPressed = true;
-            break;
-          case 4:
-            rotate(CCW, 34); // Rotate clockwise 45 degrees
-            break;
-          case 5:
-            rotate(CCW, 52); // Rotate counterclockwise 45 degrees
-            break;
-        }
-      }
-    }
-
-    enableMotor(BOTH_MOTORS);
-    setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
-
+    
     /* If the left encoder count is less than the right, increase
        the left motor speed by 1 */
     if (leftPulse < rightPulse) {
@@ -191,11 +139,51 @@ void driveStraight() {
     }
     
     /* If the right encoder count is less than the left, increase
-       the right motor speed by 2 */
+       the right motor speed by 1 */
     if (rightPulse < leftPulse) {
       setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
       setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
-    }    
+    }
+    
+    if(digitalRead(BP_SW_PIN_0) == 0){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CW, 52);
+   }if(digitalRead(BP_SW_PIN_1) == 0){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CW, 34);
+   }if(digitalRead(BP_SW_PIN_2) == 0){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CW, 15);
+   }if(digitalRead(BP_SW_PIN_3) == 0){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CCW, 15);
+   }if(digitalRead(BP_SW_PIN_4) == 0){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CCW, 34);
+  }if(digitalRead(BP_SW_PIN_5) == 0){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CCW, 52);
+  }if(digitalRead(BP_SW_PIN_2) == 0 && digitalRead(BP_SW_PIN_3) == 0){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      break;
+    }
+    enableMotor(BOTH_MOTORS);
+    setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+ 
   }
 }
 
