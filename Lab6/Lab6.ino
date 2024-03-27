@@ -57,8 +57,8 @@ void setup() {
 void loop() {
   startProgram();
   driveStraight(); // Drive straight till a wall is hit
-  // reverse(5.08);   // Back up 2 inches (5.08cm)
-  // rotate(CW, 90);
+  rotate(CW, 180);
+  reverse(5.08);   // Back up 2 inches (5.08cm)
   
 }
 
@@ -118,6 +118,9 @@ void driveStraight() {
   resetLeftEncoderCnt();  // Reset Left Encoder Count
   resetRightEncoderCnt(); // Reset Right Encoder Count
 
+  bool frontLeft = false;
+  bool frontRight = false;
+
   uint16_t leftPulse = 0;   // Total amount of left encoder pulses received
   uint16_t rightPulse = 0;  // Total amount of right encoder pulses received
   
@@ -144,49 +147,94 @@ void driveStraight() {
       setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
       setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
     }
-    
-    if(digitalRead(BP_SW_PIN_0) == 0){
+   
+   if(digitalRead(BP_SW_PIN_0) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
       reverse(5.08);
       rotate(CW, 52);
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+      
    }if(digitalRead(BP_SW_PIN_1) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
       reverse(5.08);
       rotate(CW, 34);
-   }if(digitalRead(BP_SW_PIN_2) == 0){
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+
+   }if(digitalRead(BP_SW_PIN_2) == 0 && digitalRead(BP_SW_PIN_3) == 1){
+      
+      frontRight = true;
+      
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
       reverse(5.08);
-      rotate(CW, 15);
-   }if(digitalRead(BP_SW_PIN_3) == 0){
+      rotate(CW, 5);
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+
+   }if(digitalRead(BP_SW_PIN_3) == 0 && digitalRead(BP_SW_PIN_2) == 1){
+
+      frontLeft = true;
+    
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
       reverse(5.08);
-      rotate(CCW, 15);
+      rotate(CCW, 5);
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+      
    }if(digitalRead(BP_SW_PIN_4) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
       reverse(5.08);
       rotate(CCW, 34);
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+      
   }if(digitalRead(BP_SW_PIN_5) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
       reverse(5.08);
       rotate(CCW, 52);
-  }if(digitalRead(BP_SW_PIN_2) == 0 && digitalRead(BP_SW_PIN_3) == 0){
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+      
+    }
+
+    if(frontLeft && frontRight){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
       break;
     }
-    enableMotor(BOTH_MOTORS);
-    setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
- 
   }
 }
-
 
 /* Function Name: rotate
    Input: 2 Input Variables, rotational direction and rotational degree as integers
