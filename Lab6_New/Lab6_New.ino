@@ -19,6 +19,12 @@
 #define cntPerRevolution    360      // Number of encoder (rising) pulses every time the wheel turns completely
 #define BASE_R                  7
 #define BASE_D                  2 * BASE_R
+
+#define RIGHT_SENSORS                0 
+#define LEFT_SENSORS                  1
+#define FRONT_TWO_SENSORS     2
+#define NONE                                   3
+ int switches_hit = NONE; 
 void setup() {
   Serial.begin(9600);         // Start serial com at 9600 baud rate
   setupRSLK();                // Initialize RSLK functions and classes
@@ -37,12 +43,8 @@ void setup() {
 void loop() {
    startProgram();
    forward(LEFT_MOTOR_SPEED, RIGHT_MOTOR_SPEED);
-   backUp(20, RIGHT_MOTOR_SPEED, LEFT_MOTOR_SPEED);
-   rotate(CW, 180);
-   forward(LEFT_MOTOR_SPEED, RIGHT_MOTOR_SPEED);
-   rotate(CW, 180);
-  }
 
+}
 
 void forward(int left_speed, int right_speed){
   int minSpeed = 5;
@@ -63,7 +65,6 @@ void forward(int left_speed, int right_speed){
   setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
   enableMotor(BOTH_MOTORS);
    while(hitObstacle==false){
-
      right_cnt = getEncoderRightCnt();
      left_cnt = getEncoderLeftCnt();
 
@@ -79,14 +80,28 @@ void forward(int left_speed, int right_speed){
     setMotorSpeed(LEFT_MOTOR, left_speed);
     setMotorSpeed(RIGHT_MOTOR, right_speed);
 
-    if(digitalRead(BP_SW_PIN_0) == 0)
-      break;
-
-    if(digitalRead(BP_SW_PIN_1) == 0)
-      break;
+  
+    if(digitalRead(BP_SW_PIN_0)== 0){
+      hitObstacle = true;
+      switches_hit = RIGHT_SENSORS;
+    }
+     if(digitalRead(BP_SW_PIN_1)== 0){
+      hitObstacle = true;
+      switches_hit = RIGHT_SENSORS;
+    }
     if(digitalRead(BP_SW_PIN_2) + digitalRead(BP_SW_PIN_3) == 0){
        hitObstacle = true;
-      } 
+       switches_hit = FRONT_TWO_SENSORS;
+      }
+    if(digitalRead(BP_SW_PIN_4) == 0 ){
+       hitObstacle = true;
+       switches_hit = LEFT_SENSORS;
+      }
+      if(digitalRead(BP_SW_PIN_5) == 0 ){
+       switches_hit = LEFT_SENSORS;
+       hitObstacle = true;
+       
+      } else { switches_hit =NONE;}
    }
    disableMotor(BOTH_MOTORS);
    delay (2000);
@@ -98,7 +113,7 @@ void forward(int left_speed, int right_speed){
    Details: Rotates the robot in place by the specified degrees and direction.
 */
 void rotate(int rotate_dir, int rotate_deg) {
-  
+  delay(1000);
   float distance = (BASE_D * PI) * (rotate_deg / 360.0);
   uint32_t targetCount = countForDistance(wheelDiameter, cntPerRevolution, distance);
   resetLeftEncoderCnt();
@@ -112,7 +127,7 @@ void rotate(int rotate_dir, int rotate_deg) {
     case CW:
       setMotorDirection(RIGHT_MOTOR, MOTOR_DIR_BACKWARD);
       setMotorDirection(LEFT_MOTOR, MOTOR_DIR_FORWARD);
-      
+ 
     case CCW:  
       setMotorDirection(RIGHT_MOTOR, MOTOR_DIR_FORWARD);
       setMotorDirection(LEFT_MOTOR, MOTOR_DIR_BACKWARD);
@@ -128,11 +143,12 @@ void rotate(int rotate_dir, int rotate_deg) {
   }
   
   disableMotor(BOTH_MOTORS);
-  delay(2000);
+  delay(1000);
   
 }
 
 void backUp(float distance, int right_speed, int left_speed){
+  delay(1000);
   resetRightEncoderCnt();
   resetLeftEncoderCnt();
 
@@ -143,14 +159,14 @@ void backUp(float distance, int right_speed, int left_speed){
 
   setMotorDirection(BOTH_MOTORS, MOTOR_DIR_BACKWARD);
   enableMotor(BOTH_MOTORS);
-  setRawMotorSpeed(LEFT_MOTOR, left_speed);
-  setRawMotorSpeed(RIGHT_MOTOR, right_speed);
+  setMotorSpeed(LEFT_MOTOR, left_speed);
+  setMotorSpeed(RIGHT_MOTOR, right_speed);
 
   while((left_cnt < target_cnt) || (right_cnt < target_cnt)){
     left_cnt = getEncoderLeftCnt();
     right_cnt = getEncoderRightCnt();
   }
-  disableMotor(BOTH_MOTORS  );
+  disableMotor(BOTH_MOTORS);
   delay(2000);
 }
 /* Function Name: countForDistance
