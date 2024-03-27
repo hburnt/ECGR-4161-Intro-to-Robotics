@@ -57,9 +57,8 @@ void setup() {
 void loop() {
   startProgram();
   driveStraight(); // Drive straight till a wall is hit
-  rotate(CW, 180);
-  reverse(5.08);   // Back up 2 inches (5.08cm)
-  
+  rotate(CW, 180); // Rotate 180 degrees
+  reverse(6.35);   // Back up 2 inches (5.08cm + 1.27cm to account for robot chassis)
 }
 
 
@@ -147,6 +146,12 @@ void driveStraight() {
       setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
       setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
     }
+
+    if(frontLeft && frontRight){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      break;
+    }
    
    if(digitalRead(BP_SW_PIN_0) == 0){
       disableMotor(BOTH_MOTORS);
@@ -226,12 +231,6 @@ void driveStraight() {
       setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
       setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
       
-    }
-
-    if(frontLeft && frontRight){
-      disableMotor(BOTH_MOTORS);
-      delay(DELAY_MS);
-      break;
     }
   }
 }
