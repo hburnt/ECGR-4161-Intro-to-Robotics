@@ -27,7 +27,7 @@
 
 #include "SimpleRSLK.h"
 
-#define DELAY_MS            2000   // delay in milliseconds
+#define DELAY_MS            250   // delay in milliseconds
 
 // Default pwm signals (percentage-% of power 0-100) for both RSLK motor.
 // Change these values as needed
@@ -44,6 +44,7 @@
 #define wheelDiameter       6.999    // in centimeters
 #define cntPerRevolution    360      // Number of encoder (rising) pulses every time the wheel turns completely
 
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);         // Start serial com at 9600 baud rate
@@ -57,8 +58,6 @@ void setup() {
 void loop() {
   startProgram();
   driveStraight(); // Drive straight till a wall is hit
-  rotate(CW, 180); // Rotate 180 degrees
-  reverse(6.35);   // Back up 2 inches (5.08cm + 1.27cm to account for robot chassis)
 }
 
 
@@ -117,19 +116,21 @@ void driveStraight() {
   resetLeftEncoderCnt();  // Reset Left Encoder Count
   resetRightEncoderCnt(); // Reset Right Encoder Count
 
-  bool frontLeft = false;
-  bool frontRight = false;
+  bool hitObject = false;
 
   uint16_t leftPulse = 0;   // Total amount of left encoder pulses received
   uint16_t rightPulse = 0;  // Total amount of right encoder pulses received
+  uint32_t firstWallCount = 0;
+  uint32_t secondWallCount = 0;
   
   enableMotor(BOTH_MOTORS);
   setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
   
   setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
   setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
-  
-  while (true) {
+
+  // Drive straight till a wall is hit
+  while(!hitObject){
     leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
     rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
     
@@ -146,14 +147,54 @@ void driveStraight() {
       setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
       setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
     }
+    
+    for(int x = 0;x<TOTAL_BP_SW;x++)
+    {
+      /* Check if bump switch was pressed */
+      if(isBumpSwitchPressed(x) == true) {
+        hitObject = true;
+        disableMotor(BOTH_MOTORS);
+        delay(DELAY_MS);
+        reverse(5.08);
+      }
+    }
+  }
 
+  // Make robot perpendicular to wall
+  bool frontLeft = false;
+  bool frontRight = false;
+
+  enableMotor(BOTH_MOTORS);
+  setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+
+  setMotorSpeed(LEFT_MOTOR, LEFT_TURN_SPEED);
+  setMotorSpeed(RIGHT_MOTOR, RIGHT_TURN_SPEED);
+  
+  while((frontLeft & frontRight) == false){
+    leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
+    rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
+    
+    /* If the left encoder count is less than the right, increase
+       the left motor speed by 1 */
+    if (leftPulse < rightPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED + 1);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+    }
+    
+    /* If the right encoder count is less than the left, increase
+       the right motor speed by 1 */
+    if (rightPulse < leftPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
+    }
+    
     if(frontLeft && frontRight){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
       break;
     }
-   
-   if(digitalRead(BP_SW_PIN_0) == 0){
+    
+    if(digitalRead(BP_SW_PIN_0) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
       reverse(5.08);
@@ -230,9 +271,313 @@ void driveStraight() {
       
       setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
       setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
-      
     }
   }
+
+  // Robot drives straight and gets distance from wall to wall
+  rotate(CW, 180); // Rotate 180 degrees
+  reverse(5.08);   // Back up 2 inches (5.08cm + 1.27cm to account for robot chassis)
+
+  hitObject = false;
+
+  enableMotor(BOTH_MOTORS);
+  setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+
+  setMotorSpeed(LEFT_MOTOR, LEFT_TURN_SPEED);
+  setMotorSpeed(RIGHT_MOTOR, RIGHT_TURN_SPEED);
+  
+  while(!hitObject){
+    leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
+    rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
+    
+    /* If the left encoder count is less than the right, increase
+       the left motor speed by 1 */
+    if (leftPulse < rightPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED + 1);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+    }
+    
+    /* If the right encoder count is less than the left, increase
+       the right motor speed by 1 */
+    if (rightPulse < leftPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
+    }
+    
+    for(int x = 0;x<TOTAL_BP_SW;x++)
+    {
+      if(isBumpSwitchPressed(x) == true) {
+        hitObject = true;
+        disableMotor(BOTH_MOTORS);
+        firstWallCount = (leftPulse + rightPulse) / 2;
+        delay(DELAY_MS);
+        reverse(5.08);
+      }
+    }
+  }
+
+  // Robot turns to drive straight till second wall is hit
+  rotate(CW, 90);
+  hitObject = false;
+
+  enableMotor(BOTH_MOTORS);
+  setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+
+  setMotorSpeed(LEFT_MOTOR, LEFT_TURN_SPEED);
+  setMotorSpeed(RIGHT_MOTOR, RIGHT_TURN_SPEED);
+
+  while(!hitObject){
+    leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
+    rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
+    
+    /* If the left encoder count is less than the right, increase
+       the left motor speed by 1 */
+    if (leftPulse < rightPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED + 1);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+    }
+    
+    /* If the right encoder count is less than the left, increase
+       the right motor speed by 1 */
+    if (rightPulse < leftPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
+    }
+    
+    for(int x = 0;x<TOTAL_BP_SW;x++)
+    {
+      /* Check if bump switch was pressed */
+      if(isBumpSwitchPressed(x) == true) {
+        hitObject = true;
+        reverse(5.08);
+        break;
+      }
+    }
+  }
+
+  // Robot is perpendicular to wall
+  
+  frontLeft = false;
+  frontRight = false;
+
+  enableMotor(BOTH_MOTORS);
+  setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+
+  setMotorSpeed(LEFT_MOTOR, LEFT_TURN_SPEED);
+  setMotorSpeed(RIGHT_MOTOR, RIGHT_TURN_SPEED);
+  
+  while((frontLeft & frontRight) == false){
+    leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
+    rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
+    
+    /* If the left encoder count is less than the right, increase
+       the left motor speed by 1 */
+    if (leftPulse < rightPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED + 1);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+    }
+    
+    /* If the right encoder count is less than the left, increase
+       the right motor speed by 1 */
+    if (rightPulse < leftPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
+    }
+    
+    if(frontLeft && frontRight){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      break;
+    }
+    
+    if(digitalRead(BP_SW_PIN_0) == 0){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CW, 52);
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+      
+   }if(digitalRead(BP_SW_PIN_1) == 0){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CW, 34);
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+
+   }if(digitalRead(BP_SW_PIN_2) == 0 && digitalRead(BP_SW_PIN_3) == 1){
+      
+      frontRight = true;
+      
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CW, 5);
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+
+   }if(digitalRead(BP_SW_PIN_3) == 0 && digitalRead(BP_SW_PIN_2) == 1){
+
+      frontLeft = true;
+    
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CCW, 5);
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+      
+   }if(digitalRead(BP_SW_PIN_4) == 0){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CCW, 34);
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+      
+  }if(digitalRead(BP_SW_PIN_5) == 0){
+      disableMotor(BOTH_MOTORS);
+      delay(DELAY_MS);
+      reverse(5.08);
+      rotate(CCW, 52);
+
+      enableMotor(BOTH_MOTORS);
+      setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+      
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+    }
+  }
+
+  // Robot turns 180 and then travels distance of second wall
+
+  rotate(CW, 180);
+  reverse(5.08);   // Back up 2 inches (5.08cm + 1.27cm to account for robot chassis)
+  hitObject = false;
+
+  enableMotor(BOTH_MOTORS);
+  setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+
+  setMotorSpeed(LEFT_MOTOR, LEFT_TURN_SPEED);
+  setMotorSpeed(RIGHT_MOTOR, RIGHT_TURN_SPEED);
+    
+  while(!hitObject){
+    leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
+    rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
+    
+    /* If the left encoder count is less than the right, increase
+       the left motor speed by 1 */
+    if (leftPulse < rightPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED + 1);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+    }
+    
+    /* If the right encoder count is less than the left, increase
+       the right motor speed by 1 */
+    if (rightPulse < leftPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
+    }
+    
+    for(int x = 0;x<TOTAL_BP_SW;x++)
+    {
+      /* Check if bump switch was pressed */
+      if(isBumpSwitchPressed(x) == true) {
+        secondWallCount = (leftPulse + rightPulse) / 2;
+        reverse(5.08);
+        hitObject = true;
+        break;
+      }
+    }
+  }
+
+  uint16_t originX = firstWallCount / 2;
+  uint16_t originY = secondWallCount / 2;
+
+  rotate(CCW, 90);
+  reverse(5.08);
+
+  leftPulse = 0;
+  rightPulse = 0;
+
+  enableMotor(BOTH_MOTORS);
+  setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+
+  setMotorSpeed(LEFT_MOTOR, LEFT_TURN_SPEED);
+  setMotorSpeed(RIGHT_MOTOR, RIGHT_TURN_SPEED);
+  
+  while (leftPulse < originY && rightPulse < originY) {    // Check Encoders against target pulse count
+    leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
+    rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
+
+    /* If the left encoder count is less than the right, increase
+       the left motor speed by 1 */
+    if (leftPulse < rightPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED + 1);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+    }
+    
+    /* If the right encoder count is less than the left, increase
+       the right motor speed by 2 */
+    if (rightPulse < leftPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
+    }
+  }
+
+  rotate(CCW,90);
+  reverse(5.08);
+
+  enableMotor(BOTH_MOTORS);
+  setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+
+  setMotorSpeed(LEFT_MOTOR, LEFT_TURN_SPEED);
+  setMotorSpeed(RIGHT_MOTOR, RIGHT_TURN_SPEED);
+  
+  while (leftPulse < originX && rightPulse < originX) {    // Check Encoders against target pulse count
+    leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
+    rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
+
+    /* If the left encoder count is less than the right, increase
+       the left motor speed by 1 */
+    if (leftPulse < rightPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED + 1);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+    }
+    
+    /* If the right encoder count is less than the left, increase
+       the right motor speed by 2 */
+    if (rightPulse < leftPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
+    }
+  }
+
+  disableMotor(BOTH_MOTORS);
+
+  
+  digitalWrite(RED_LED, HIGH);   // Turn Red LED on to signify its done
 }
 
 /* Function Name: rotate
