@@ -28,6 +28,7 @@
 #include "SimpleRSLK.h"
 
 #define DELAY_MS            250   // delay in milliseconds
+#define BACKUP_DIST         5.08
 
 // Default pwm signals (percentage-% of power 0-100) for both RSLK motor.
 // Change these values as needed
@@ -155,7 +156,7 @@ void driveStraight() {
         hitObject = true;
         disableMotor(BOTH_MOTORS);
         delay(DELAY_MS);
-        reverse(5.08);
+        reverse(BACKUP_DIST);
       }
     }
   }
@@ -197,7 +198,7 @@ void driveStraight() {
     if(digitalRead(BP_SW_PIN_0) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CW, 52);
 
       enableMotor(BOTH_MOTORS);
@@ -209,7 +210,7 @@ void driveStraight() {
    }if(digitalRead(BP_SW_PIN_1) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CW, 34);
 
       enableMotor(BOTH_MOTORS);
@@ -224,7 +225,7 @@ void driveStraight() {
       
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CW, 5);
 
       enableMotor(BOTH_MOTORS);
@@ -239,7 +240,7 @@ void driveStraight() {
     
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CCW, 5);
 
       enableMotor(BOTH_MOTORS);
@@ -251,7 +252,7 @@ void driveStraight() {
    }if(digitalRead(BP_SW_PIN_4) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CCW, 34);
 
       enableMotor(BOTH_MOTORS);
@@ -263,7 +264,7 @@ void driveStraight() {
   }if(digitalRead(BP_SW_PIN_5) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CCW, 52);
 
       enableMotor(BOTH_MOTORS);
@@ -276,7 +277,7 @@ void driveStraight() {
 
   // Robot drives straight and gets distance from wall to wall
   rotate(CW, 180); // Rotate 180 degrees
-  reverse(5.08);   // Back up 2 inches (5.08cm + 1.27cm to account for robot chassis)
+  reverse(BACKUP_DIST);   // Back up 2 inches (BACKUP_DISTcm + 1.27cm to account for robot chassis)
 
   hitObject = false;
 
@@ -311,7 +312,7 @@ void driveStraight() {
         disableMotor(BOTH_MOTORS);
         firstWallCount = (leftPulse + rightPulse) / 2;
         delay(DELAY_MS);
-        reverse(5.08);
+        reverse(BACKUP_DIST);
       }
     }
   }
@@ -349,7 +350,7 @@ void driveStraight() {
       /* Check if bump switch was pressed */
       if(isBumpSwitchPressed(x) == true) {
         hitObject = true;
-        reverse(5.08);
+        reverse(BACKUP_DIST);
         break;
       }
     }
@@ -393,7 +394,7 @@ void driveStraight() {
     if(digitalRead(BP_SW_PIN_0) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CW, 52);
 
       enableMotor(BOTH_MOTORS);
@@ -405,7 +406,7 @@ void driveStraight() {
    }if(digitalRead(BP_SW_PIN_1) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CW, 34);
 
       enableMotor(BOTH_MOTORS);
@@ -420,7 +421,7 @@ void driveStraight() {
       
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CW, 5);
 
       enableMotor(BOTH_MOTORS);
@@ -435,7 +436,7 @@ void driveStraight() {
     
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CCW, 5);
 
       enableMotor(BOTH_MOTORS);
@@ -447,7 +448,7 @@ void driveStraight() {
    }if(digitalRead(BP_SW_PIN_4) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CCW, 34);
 
       enableMotor(BOTH_MOTORS);
@@ -459,7 +460,7 @@ void driveStraight() {
   }if(digitalRead(BP_SW_PIN_5) == 0){
       disableMotor(BOTH_MOTORS);
       delay(DELAY_MS);
-      reverse(5.08);
+      reverse(BACKUP_DIST);
       rotate(CCW, 52);
 
       enableMotor(BOTH_MOTORS);
@@ -473,7 +474,7 @@ void driveStraight() {
   // Robot turns 180 and then travels distance of second wall
 
   rotate(CW, 180);
-  reverse(5.08);   // Back up 2 inches (5.08cm + 1.27cm to account for robot chassis)
+  reverse(BACKUP_DIST);   // Back up 2 inches (BACKUP_DISTcm + 1.27cm to account for robot chassis)
   hitObject = false;
 
   enableMotor(BOTH_MOTORS);
@@ -505,7 +506,7 @@ void driveStraight() {
       /* Check if bump switch was pressed */
       if(isBumpSwitchPressed(x) == true) {
         secondWallCount = (leftPulse + rightPulse) / 2;
-        reverse(5.08);
+        reverse(BACKUP_DIST);
         hitObject = true;
         break;
       }
@@ -516,10 +517,39 @@ void driveStraight() {
   uint16_t originY = secondWallCount / 2;
 
   rotate(CCW, 90);
-  reverse(5.08);
+  reverse(BACKUP_DIST);
 
   leftPulse = 0;
   rightPulse = 0;
+
+  enableMotor(BOTH_MOTORS);
+  setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
+
+  setMotorSpeed(LEFT_MOTOR, LEFT_TURN_SPEED);
+  setMotorSpeed(RIGHT_MOTOR, RIGHT_TURN_SPEED);
+  
+  while (leftPulse < originX && rightPulse < originX) {    // Check Encoders against target pulse count
+    leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
+    rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
+
+    /* If the left encoder count is less than the right, increase
+       the left motor speed by 1 */
+    if (leftPulse < rightPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED + 1);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
+    }
+    
+    /* If the right encoder count is less than the left, increase
+       the right motor speed by 1 */
+    if (rightPulse < leftPulse) {
+      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
+      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
+    }
+  }
+  disableMotor(BOTH_MOTORS); 
+
+  rotate(CCW,90);
+  reverse(BACKUP_DIST);
 
   enableMotor(BOTH_MOTORS);
   setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
@@ -546,37 +576,7 @@ void driveStraight() {
     }
   }
 
-  rotate(CCW,90);
-  reverse(5.08);
-
-  enableMotor(BOTH_MOTORS);
-  setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
-
-  setMotorSpeed(LEFT_MOTOR, LEFT_TURN_SPEED);
-  setMotorSpeed(RIGHT_MOTOR, RIGHT_TURN_SPEED);
-  
-  while (leftPulse < originX && rightPulse < originX) {    // Check Encoders against target pulse count
-    leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
-    rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
-
-    /* If the left encoder count is less than the right, increase
-       the left motor speed by 1 */
-    if (leftPulse < rightPulse) {
-      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED + 1);
-      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
-    }
-    
-    /* If the right encoder count is less than the left, increase
-       the right motor speed by 2 */
-    if (rightPulse < leftPulse) {
-      setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
-      setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
-    }
-  }
-
-  disableMotor(BOTH_MOTORS);
-
-  
+  disableMotor(BOTH_MOTORS);  
   digitalWrite(RED_LED, HIGH);   // Turn Red LED on to signify its done
 }
 
