@@ -350,6 +350,7 @@ void driveStraight() {
       /* Check if bump switch was pressed */
       if(isBumpSwitchPressed(x) == true) {
         hitObject = true;
+        delay(DELAY_MS);
         reverse(BACKUP_DIST);
         break;
       }
@@ -505,9 +506,10 @@ void driveStraight() {
     {
       /* Check if bump switch was pressed */
       if(isBumpSwitchPressed(x) == true) {
-        secondWallCount = (leftPulse + rightPulse) / 2;
-        reverse(BACKUP_DIST);
         hitObject = true;
+        secondWallCount = (leftPulse + rightPulse) / 2;
+        delay(DELAY_MS);
+        reverse(BACKUP_DIST);
         break;
       }
     }
@@ -521,6 +523,9 @@ void driveStraight() {
 
   leftPulse = 0;
   rightPulse = 0;
+  
+  resetLeftEncoderCnt();  // Reset Left Encoder Count
+  resetRightEncoderCnt(); // Reset Right Encoder Count
 
   enableMotor(BOTH_MOTORS);
   setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
@@ -550,6 +555,12 @@ void driveStraight() {
 
   rotate(CCW,90);
   reverse(BACKUP_DIST);
+
+  leftPulse = 0;
+  rightPulse = 0;
+
+  resetLeftEncoderCnt();  // Reset Left Encoder Count
+  resetRightEncoderCnt(); // Reset Right Encoder Count
 
   enableMotor(BOTH_MOTORS);
   setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
