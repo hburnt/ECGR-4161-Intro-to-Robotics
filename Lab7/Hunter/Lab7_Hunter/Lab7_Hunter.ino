@@ -12,9 +12,9 @@
 
 // Default pwm signals (percentage-% of power 0-100) for both RSLK motor.
 // Change these values as needed
-#define LEFT_MOTOR_SPEED     11   // Speed percentage
+#define LEFT_MOTOR_SPEED     12   // Speed percentage
 #define RIGHT_MOTOR_SPEED    12   // Speed percentage
-#define LEFT_TURN_SPEED      15   // 6%/100 Speed percentage
+#define LEFT_TURN_SPEED      17   // 6%/100 Speed percentage
 #define RIGHT_TURN_SPEED     17   // 6%/100 Speed percentage
 
 // Value for turning directions (do not change)
@@ -26,8 +26,9 @@
 #define cntPerRevolution    360           // Number of encoder (rising) pulses every time the wheel turns completely
 
 #define turnDegree            5
-#define fovDegree             90
+#define fovDegree             360
 #define distanceArrayLength   fovDegree/turnDegree
+#define robotBase             5.5
 
 #define numPings            5
 
@@ -36,6 +37,7 @@ const int echoPin = 33;           //connects to the echo pin on the distance sen
 float distance = 1;               //stores the distance measured by the distance sensor
 
 float distances[distanceArrayLength];
+float farthestDistances[4];
 float localDistances[4];
 
 void setup() {
@@ -54,14 +56,19 @@ void loop() {
   startProgram();
 
   // Pathfinding
-//  storeDistances(distances, distanceArrayLength, turnDegree);
+  //  storeDistances(distances, distanceArrayLength, turnDegree);
 //  alignNCenter();
+//
+//  findLongestDist();
+// 
 //  turnNCheck();
 //  turnNCheck();
 //  turnNCheck();
 
   // Localizing in Large Room
   localize();
+  blinkLED(GREEN_LED, 1000);
+
   
 }
 
@@ -155,16 +162,30 @@ void turnNCheck(){
   cwDist = getDistance();
   delay(100);
 
-  rotate(CCW, 90);
-  delay(100);
   
   if(cwDist > ccwDist){
-    rotate(CW, 90);
-    forward(6.0);
+    forward(cwDist-robotBase);
   }else{
-    rotate(CCW, 90);
-    forward(6.0);
+    rotate(CCW, 180);
+    forward(ccwDist-robotBase);
   }  
+}
+
+void findLongestDist(){
+   storeDistances(farthestDistances, 4, 90);
+   float temp = 0;
+   int idx = 0;
+   for(int i = 0; i < 4; i++){
+    if(farthestDistances[i] > temp){
+      temp = farthestDistances[i];
+      idx = i;
+    }
+  }
+  delayMicroseconds(10);
+  rotate(CW, 270 - (90 * idx));
+  
+  delay(100);
+  forward(farthestDistances[idx]-robotBase);
 }
 /* Function Name: 
    Input: void
@@ -177,10 +198,12 @@ void localize(){
   float centerY = 0;
   
   int pings[numPings];
+  int degTurn = 90;
 
-  storeDistances(localDistances, 4, 90);
-  rotate(CW, 90);
+  storeDistances(localDistances, 4, degTurn);
+  rotate(CW, degTurn);
 
+  // Index localDistances[0] : 0, localDistances[1] : 90, localDistances[2] : 180, localDistances[3] : 270
   roomX = ((localDistances[1] + localDistances[3])+ 2.75591);
   roomY = ((localDistances[0] + localDistances[2])+ 2.75591);
 
@@ -188,18 +211,29 @@ void localize(){
   centerY = roomY/2;
 
   if(localDistances[0] > localDistances[2]){
+    
     rotate(CW, 180);
+    delay(200);
+    forward(localDistances[0]- centerY);
+    
+  }else{
+    delay(200);
+    forward(localDistances[2]- centerY);
   }
-  forward(centerY);
+  
+
 
   if(localDistances[1] > localDistances[3]){
     rotate(CW, 90);
+    delay(200);
+    forward(localDistances[1] - centerX);
   }else{
     rotate(CCW, 90);
+    delay(200);
+    forward(localDistances[3] - centerX);
   }
-  forward(centerX);
+ 
 }
-
 
 /* Function Name: rotate
    Input: 2 Input Variables, rotational direction and rotational degree as integers
@@ -259,25 +293,26 @@ void rotate(int rotate_dir, int rotate_deg) {
             and at a specified distance in centimeters on a 
             straight linear line.
 */
-void forward(float target_dist) {
+void forward(float travel_dist) {
 
   resetLeftEncoderCnt();
-  resetRightEncoderCnt();  // Reset both encoder counts
+  resetRightEncoderCnt();
+
+  float convertDist = travel_dist*2.54;
   uint16_t leftPulse = 0;   // Total amount of left encoder pulses received
   uint16_t rightPulse = 0;  // Total amount of right encoder pulses received
-  
+  uint32_t totalPulses = countForDistance(wheelDiameter, cntPerRevolution, convertDist);
+
   enableMotor(BOTH_MOTORS);
   setMotorDirection(BOTH_MOTORS, MOTOR_DIR_FORWARD);
 
   setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
   setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
-
-  float measured_dist = getDistance();
   
-  while (measured_dist > target_dist) {
+  while (leftPulse < totalPulses && rightPulse < totalPulses) {    // Check Encoders against target pulse count
     leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
     rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
-    measured_dist = getDistance();
+
     /* If the left encoder count is less than the right, increase
        the left motor speed by 1 */
     if (leftPulse < rightPulse) {
@@ -291,15 +326,6 @@ void forward(float target_dist) {
       setMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
       setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 1);
     }
-    delay(50);
-
-    measured_dist = getDistance();   //variable to store the distance measured by the sensor
-  
-    Serial.print(measured_dist);     //print the distance that was measured
-    Serial.println(" inches");      //print units (inches) after the distance
-    //Serial.println(" cm");      //print units (centimeters) after the distance
-    
-    delay(65);      //delay 65ms between each reading
   }
   disableMotor(BOTH_MOTORS);
   delay(DELAY_MS);
@@ -346,22 +372,6 @@ void reverse(float travel_dist){
   disableMotor(BOTH_MOTORS);
   delay(DELAY_MS);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* Function Name: countForDistance
    Input: 3 input variables
