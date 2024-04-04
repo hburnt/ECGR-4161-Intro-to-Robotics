@@ -25,7 +25,7 @@
 #define wheelDiameter       6.999         // in centimeters
 #define cntPerRevolution    360           // Number of encoder (rising) pulses every time the wheel turns completely
 
-#define turnDegree            5 // 3
+#define turnDegree            5
 #define fovDegree             90
 #define distanceArrayLength   fovDegree/turnDegree
 
@@ -36,7 +36,7 @@ const int echoPin = 33;           //connects to the echo pin on the distance sen
 float distance = 1;               //stores the distance measured by the distance sensor
 
 float distances[distanceArrayLength];
-float pings[numPings];
+float localDistances[4];
 
 void setup() {
   //Do not edit this setup function
@@ -52,12 +52,17 @@ void setup() {
 
 void loop() {
   startProgram();
-  //storeDistances();
-  //alignNCenter();
-  turnNCheck();
 
+  // Pathfinding
+//  storeDistances(distances, distanceArrayLength, turnDegree);
+//  alignNCenter();
+//  turnNCheck();
+//  turnNCheck();
+//  turnNCheck();
+
+  // Localizing in Large Room
+  localize();
   
-
 }
 
 //------------------FUNCTIONS-------------------------------
@@ -90,8 +95,9 @@ float getDistance() {
    Details: Function called to store ultrasonic distances at each angles.
             depending on turnDegree
 */
-void storeDistances(){
-  for(int i = 0; i < distanceArrayLength; i++){
+void storeDistances(float dists[], int arrayLength, int turnDeg){
+  float pings[numPings];
+  for(int i = 0; i < arrayLength; i++){
     for(int j = 0; j < numPings; j++){
       pings[j] = getDistance();
       delay(65);
@@ -105,14 +111,17 @@ void storeDistances(){
         }
       }
     }
-    distances[i] = pings[(numPings-1)/2];
-    if(i < distanceArrayLength-1){
-      rotate(CCW, turnDegree);
+    dists[i] = pings[(numPings-1)/2];
+    if(i < arrayLength-1){
+      rotate(CCW, turnDeg);
     }
-
   }
 }
 
+/* Function Name: 
+   Input: void
+   Details: 
+*/
 void alignNCenter(){
   float temp = 999;
   int idx = 0;
@@ -123,13 +132,15 @@ void alignNCenter(){
       idx = i;
     }
   }
-
-  Serial.println(idx);
-  
+    
   delayMicroseconds(10);
   rotate(CW, fovDegree - (turnDegree * idx));
 }
 
+/* Function Name: 
+   Input: void
+   Details: 
+*/
 void turnNCheck(){
   float cwDist = 0;
   float ccwDist = 0;
@@ -149,12 +160,46 @@ void turnNCheck(){
   
   if(cwDist > ccwDist){
     rotate(CW, 90);
-    forward();
+    forward(6.0);
   }else{
     rotate(CCW, 90);
-    forward();
+    forward(6.0);
   }  
 }
+/* Function Name: 
+   Input: void
+   Details: 
+*/
+void localize(){
+  float roomX = 0;
+  float roomY = 0;
+  float centerX = 0;
+  float centerY = 0;
+  
+  int pings[numPings];
+
+  storeDistances(localDistances, 4, 90);
+  rotate(CW, 90);
+
+  roomX = ((localDistances[1] + localDistances[3])+ 2.75591);
+  roomY = ((localDistances[0] + localDistances[2])+ 2.75591);
+
+  centerX = roomX/2;
+  centerY = roomY/2;
+
+  if(localDistances[0] > localDistances[2]){
+    rotate(CW, 180);
+  }
+  forward(centerY);
+
+  if(localDistances[1] > localDistances[3]){
+    rotate(CW, 90);
+  }else{
+    rotate(CCW, 90);
+  }
+  forward(centerX);
+}
+
 
 /* Function Name: rotate
    Input: 2 Input Variables, rotational direction and rotational degree as integers
@@ -214,7 +259,7 @@ void rotate(int rotate_dir, int rotate_deg) {
             and at a specified distance in centimeters on a 
             straight linear line.
 */
-void forward() {
+void forward(float target_dist) {
 
   resetLeftEncoderCnt();
   resetRightEncoderCnt();  // Reset both encoder counts
@@ -228,9 +273,8 @@ void forward() {
   setMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
 
   float measured_dist = getDistance();
-  float too_close_dist = 6.0;
   
-  while (measured_dist > too_close_dist) {
+  while (measured_dist > target_dist) {
     leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
     rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
     measured_dist = getDistance();
@@ -340,18 +384,18 @@ void startProgram() {
   String btnMsg = ""; // "Push left button on Launchpad to start lab program.\n";
   waitBtnPressed(LP_LEFT_BTN, btnMsg, RED_LED); //Setup button, msg, LED
   /* Using an LED as a DELAY */
-  blinkLED(1000); //Cause LED to blink for a period of one second
-  blinkLED(1000); //Cause LED to blink for a period of one second
+  blinkLED(RED_LED, 1000); //Cause LED to blink for a period of one second
+  blinkLED(RED_LED, 1000); //Cause LED to blink for a period of one second
 }
 
 /* Function Name: blinkLED
    Input: integer (period) in milliseconds
    Details: Function call that will blink a colored LED for a period specified.
 */
-int blinkLED(int period) {
+int blinkLED(int LED, int period) {
   int pause = period / 2;         // Determine on/off time
-  digitalWrite(GREEN_LED, HIGH);  // Turn LED on
+  digitalWrite(LED, HIGH);  // Turn LED on
   delay(pause);                   // Time the LED is on
-  digitalWrite(GREEN_LED, LOW);   // Turn LED off
+  digitalWrite(LED, LOW);   // Turn LED off
   delay(pause);                   // Time LED is off
 }
