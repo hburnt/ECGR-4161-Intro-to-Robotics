@@ -1,11 +1,11 @@
 /*************************************************************************
  * Written by Dr. Rhoades 4-9-19 | Edited by Joey Phillips 6-20-22
-
- * Be sure that the following Pins are connected correctly.
-      TRIG Pin is connectged to P3.5 of the TI-Board (Pin 32)
-      ECHO Pin is connected to P5.1 of the TI-Board (Pin 33) 
-      Also ensure that VCC goes to +5V and Gnd goes to a Ground Pin 
+ * Code created by Hunter Burnett and Aidan Cowan
+ * Lab 7 for ECGR4161 on 4/4/2024
+ * Description: This code navigates the robot out of a maze and locates
+ *              the center of the room.
 *************************************************************************/
+
 #include "SimpleRSLK.h"
 
 #define DELAY_MS            0.01   // delay in milliseconds
@@ -56,14 +56,14 @@ void loop() {
   startProgram();
 
   // Pathfinding
-  //  storeDistances(distances, distanceArrayLength, turnDegree);
-//  alignNCenter();
+   storeDistances(distances, distanceArrayLength, turnDegree);
+   alignNCenter();
 //
-//  findLongestDist();
+   findLongestDist();
 // 
-//  turnNCheck();
-//  turnNCheck();
-//  turnNCheck();
+turnNCheck();
+turnNCheck();
+turnNCheck();
 
   // Localizing in Large Room
   localize();
