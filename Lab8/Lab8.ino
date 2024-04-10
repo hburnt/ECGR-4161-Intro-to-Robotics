@@ -45,16 +45,12 @@ void loop() {
  startProgram();
  for(int i = 0; i < DOORS; i++){
   //Make servo work
-        //forward(DISTANCE);
+        forward(DISTANCE);
         delay(1000);
-        //myservo.write(180);
-        Serial.println("Turn Servo");
-        delay(1000);
-        //Serial.println("Hello");
+        myservo.write(180);
         leftSequence[i] = detectDoor();
         delay(1000);
-        //myservo.write(0);
-        Serial.println("Turn Servo");
+        myservo.write(0);
         rightSequence[i] = detectDoor();
         delay(1000);
   }
@@ -63,20 +59,20 @@ void loop() {
   for(int i = 0; i < DOORS; i++){
         backward(DISTANCE);
         myservo.write(180);
-        //rightSequenceBack[i] = detectDoor();
+        rightSequenceBack[i] = detectDoor();
         myservo.write(0);
-        //leftSequenceBack[i] = detectDoor();
+        leftSequenceBack[i] = detectDoor();
         delay(1000);
       }
    backward(DISTANCE);
-//concatArray(leftSequence, rightSequence, leftSequenceBack, rightSequenceBack);
-//for (int k = 0; k < 16; k++){
-//  Serial.print(result[k]);
-//}
-//while(true){
-//Serial.println(binaryToDecimal(result, 16));
-//Serial.println("");
-//}
+concatArray(leftSequence, rightSequence, leftSequenceBack, rightSequenceBack);
+for (int k = 0; k < 16; k++){
+  Serial.print(result[k]);
+}
+while(true){
+Serial.println(binaryToDecimal(result, 16));
+Serial.println("");
+}
 }
 
 void concatArray(int arr1[], int arr2[], int arr3[], int arr4[], int result[]){
