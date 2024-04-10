@@ -2,16 +2,16 @@
 #include "SimpleRSLK.h"
 
 #define DELAY_MS                  2000   // delay in milliseconds
-#define LEFT_MOTOR_SPEED          45  // Speed percentage, originally 12
-#define RIGHT_MOTOR_SPEED         36   // Speed percentage, originally 12
-#define LEFT_MOTOR_SPEED_BACK     45 // Speed percentage, originally 12
-#define RIGHT_MOTOR_SPEED_BACK    37   // Speed percentage, originally 12
+#define LEFT_MOTOR_SPEED          46  // Speed percentage, originally 12
+#define RIGHT_MOTOR_SPEED         35   // Speed percentage, originally 12
+#define LEFT_MOTOR_SPEED_BACK     46 // Speed percentage, originally 12
+#define RIGHT_MOTOR_SPEED_BACK    35   // Speed percentage, originally 12
 #define wheelDiameter             6.999         // in centimeters
 #define cntPerRevolution          360           // Number of encoder (rising) pulses every time the wheel turns completely
 #define DISTANCE                  18*2.5       // Distances between doorways converted from inches to cm
 #define DOORS                     4
 #define numPings                  3
-#define minWallDist               12.00         // Threshold distance to wall (cm)
+#define minWallDist               24.00         // Threshold distance to wall (cm)
 const int trigPin =               32;
 const int echoPin =               33;
 
@@ -27,6 +27,8 @@ void setup() {
   // initialize two digital pins as outputs.
   pinMode(76, OUTPUT);  //RGB Green LED possible pinMode variables -> P2.1 -> 76 -> GREEN_LED
   pinMode(77, OUTPUT);  //RGB Blue LED possible pinMode variables -> P2.2 -> 77 -> BLUE_LED
+
+  
   pinMode(trigPin, OUTPUT);   //the trigger pin will output pulses
   pinMode(echoPin, INPUT);    //the echo pin will measure the duration of pulses coming back from the distance sensor
   myservo.attach(38);   // attaches the servo on Port 6.1 (P6.1 or pin 23)to the servo object
@@ -35,6 +37,10 @@ void setup() {
 }
 
 void loop() {
+  runProgram();
+}
+
+void runProgram(){
   int leftSequence[4];
   int rightSequence[4];
   int rightSequenceBack[4];
@@ -43,14 +49,16 @@ void loop() {
   // put your main code here, to run repeatedly:
  // servoSweep(0, 180, 1);    // Function call to start servo sweep from 0-180 degrees
  startProgram();
+
  for(int i = 0; i < DOORS; i++){
   //Make servo work
         forward(DISTANCE);
         delay(1000);
         myservo.write(180);
+        delay(1500);
         leftSequence[i] = detectDoor();
-        delay(1000);
         myservo.write(0);
+        delay(1500);
         rightSequence[i] = detectDoor();
         delay(1000);
   }
@@ -58,23 +66,27 @@ void loop() {
   forward(DISTANCE);
   for(int i = 0; i < DOORS; i++){
         backward(DISTANCE);
+        delay(1000);
         myservo.write(180);
+        delay(1500);
         rightSequenceBack[i] = detectDoor();
         myservo.write(0);
+        delay(1500);
         leftSequenceBack[i] = detectDoor();
         delay(1000);
       }
-   backward(DISTANCE);
-concatArray(leftSequence, rightSequence, leftSequenceBack, rightSequenceBack);
-for (int k = 0; k < 16; k++){
-  Serial.print(result[k]);
-}
-while(true){
-Serial.println(binaryToDecimal(result, 16));
-Serial.println("");
-}
-}
+  backward(DISTANCE);
+  concatArray(leftSequence, rightSequence, leftSequenceBack, rightSequenceBack, result);
 
+  while(true){
+    Serial.println(binaryToDecimal(result, 16));
+    Serial.println(" ");
+    blinkPurpLED(500);
+    for (int k = 0; k < 16; k++){
+      Serial.print(result[k]);
+    }
+  }
+}
 void concatArray(int arr1[], int arr2[], int arr3[], int arr4[], int result[]){
   int i, j = 0;
 
@@ -123,7 +135,7 @@ void forward(float travel_dist) {
     /* If the left encoder count is less than the right, increase
        the left motor speed by 1 */
     if (leftPulse < rightPulse) {
-      setRawMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED + 3);
+      setRawMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED + 4);
       setRawMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED);
     }
     
@@ -131,7 +143,7 @@ void forward(float travel_dist) {
        the right motor speed by 2 */
     if (rightPulse < leftPulse) {
       setRawMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED);
-      setRawMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 3);
+      setRawMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED + 4);
     }
   }
   disableMotor(BOTH_MOTORS);
@@ -165,7 +177,7 @@ void backward(float travel_dist) {
     /* If the left encoder count is less than the right, increase
        the left motor speed by 1 */
     if (leftPulse < rightPulse) {
-      setRawMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED_BACK + 3);
+      setRawMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED_BACK + 4);
       setRawMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED_BACK);
     }
     
@@ -173,7 +185,7 @@ void backward(float travel_dist) {
        the right motor speed by 2 */
     if (rightPulse < leftPulse) {
       setRawMotorSpeed(LEFT_MOTOR, LEFT_MOTOR_SPEED_BACK);
-      setRawMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED_BACK + 3);
+      setRawMotorSpeed(RIGHT_MOTOR, RIGHT_MOTOR_SPEED_BACK + 4);
     }
   }
   disableMotor(BOTH_MOTORS);
@@ -255,4 +267,22 @@ long binaryToDecimal(int arr[], int size) {
     decimal = decimal * 2 + arr[i];
   }
   return decimal;
+}
+
+/* Function Name: blinkPurpLED
+   Input: integer (period) in milliseconds
+   Details: Function call that will blink the Purple LED for a period specified.
+*/
+int blinkPurpLED(int period) {
+  int pause = period / 2;        // Determine on/off time
+  
+  analogWrite(RED_LED, 64);  // Turn LED on
+  analogWrite(BLUE_LED, 64);  // Turn LED on
+  analogWrite(GREEN_LED, 0);  // Turn LED on
+  delay(pause);                  // Time the LED is on
+  
+  analogWrite(RED_LED, 0);  // Turn LED on
+  analogWrite(BLUE_LED, 0);  // Turn LED on
+  analogWrite(GREEN_LED, 0);  // Turn LED on
+  delay(pause);                  // Time LED is off
 }
