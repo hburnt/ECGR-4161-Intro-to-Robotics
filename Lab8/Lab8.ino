@@ -82,10 +82,7 @@ void runProgram(){
     Serial.println(binaryToDecimal(result, 16));
     Serial.println(" ");
     blinkPurpLED(500);
-    for (int k = 0; k < 16; k++){
-      Serial.print(result[k]);
     }
-  }
 }
 void concatArray(int arr1[], int arr2[], int arr3[], int arr4[], int result[]){
   int i, j = 0;
@@ -257,7 +254,6 @@ float getDistance() {
                                           //pulse to bounce back to the sensor in microseconds
   //calculatedDistanceInches = echoTime / 148.0;  //calculate the distance in inches of the object that reflected the pulse (half the bounce time multiplied by the speed of sound)
   calculatedDistanceCentimeters = echoTime / 58.0;  //calculate the distance in centimeters of the object that reflected the pulse (half the bounce time multiplied by the speed of sound)
-  Serial.println(calculatedDistanceCentimeters);
   return calculatedDistanceCentimeters;              //send back the distance that was calculated
 }
 
