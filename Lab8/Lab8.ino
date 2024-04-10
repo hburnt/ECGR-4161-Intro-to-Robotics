@@ -17,7 +17,7 @@ const int echoPin =               33;
 
 Servo myservo;  // create servo object to control a servo
                 // a maximum of eight servo objects can be created
-int result[16];            
+           
 void setup() {    
   // put your setup code here, to run once:
   Serial.begin(9600);   // Start serial monitor  
@@ -27,8 +27,10 @@ void setup() {
   // initialize two digital pins as outputs.
   pinMode(76, OUTPUT);  //RGB Green LED possible pinMode variables -> P2.1 -> 76 -> GREEN_LED
   pinMode(77, OUTPUT);  //RGB Blue LED possible pinMode variables -> P2.2 -> 77 -> BLUE_LED
+  pinMode(trigPin, OUTPUT);   //the trigger pin will output pulses
+  pinMode(echoPin, INPUT);    //the echo pin will measure the duration of pulses coming back from the distance sensor
   myservo.attach(38);   // attaches the servo on Port 6.1 (P6.1 or pin 23)to the servo object
-  myservo.write(90);     // Send it to the default position
+  myservo.write(0);     // Send it to the default position
   setupWaitBtn(LP_LEFT_BTN);  // Setup left button on Launchpad
 }
 
@@ -36,28 +38,34 @@ void loop() {
   int leftSequence[4];
   int rightSequence[4];
   int rightSequenceBack[4];
-  int leftSequenceBack[4]; 
+  int leftSequenceBack[4];
+  int result[16]; 
   // put your main code here, to run repeatedly:
  // servoSweep(0, 180, 1);    // Function call to start servo sweep from 0-180 degrees
  startProgram();
  for(int i = 0; i < DOORS; i++){
   //Make servo work
-        forward(DISTANCE);
-        myservo.write(180);
-        Serial.println("Hello");
-        //leftSequence[i] = detectDoor();
-        myservo.write(0);
-        //rightSequence[i] = detectDoor();
+        //forward(DISTANCE);
+        delay(1000);
+        //myservo.write(180);
+        Serial.println("Turn Servo");
+        delay(1000);
+        //Serial.println("Hello");
+        leftSequence[i] = detectDoor();
+        delay(1000);
+        //myservo.write(0);
+        Serial.println("Turn Servo");
+        rightSequence[i] = detectDoor();
         delay(1000);
   }
 
   forward(DISTANCE);
   for(int i = 0; i < DOORS; i++){
         backward(DISTANCE);
-        //servoTurn(180);
-        rightSequenceBack[i] = detectDoor();
-        //servoTurn(0);
-        leftSequenceBack[i] = detectDoor();
+        myservo.write(180);
+        //rightSequenceBack[i] = detectDoor();
+        myservo.write(0);
+        //leftSequenceBack[i] = detectDoor();
         delay(1000);
       }
    backward(DISTANCE);
@@ -71,7 +79,7 @@ void loop() {
 //}
 }
 
-void concatArray(int arr1[], int arr2[], int arr3[], int arr4[]){
+void concatArray(int arr1[], int arr2[], int arr3[], int arr4[], int result[]){
   int i, j = 0;
 
   for (i = 0; i < 4; i++){
@@ -158,7 +166,6 @@ void backward(float travel_dist) {
   while (leftPulse < totalPulses && rightPulse < totalPulses) {    // Check Encoders against target pulse count
     leftPulse = getEncoderLeftCnt();                               // Get Left Encoder Count
     rightPulse = getEncoderRightCnt();                             // Get Right Encoder Count
-    Serial.println(leftPulse);
     /* If the left encoder count is less than the right, increase
        the left motor speed by 1 */
     if (leftPulse < rightPulse) {
@@ -203,7 +210,7 @@ int detectDoor() {
     pings[i] = getDistance();
     delay(65);
   }
-  
+ 
   // Sorting the array
   for(int i = 0; i < numPings; i++) {
     for(int j = i + 1; j < numPings; j++) {
@@ -242,7 +249,7 @@ float getDistance() {
                                           //pulse to bounce back to the sensor in microseconds
   //calculatedDistanceInches = echoTime / 148.0;  //calculate the distance in inches of the object that reflected the pulse (half the bounce time multiplied by the speed of sound)
   calculatedDistanceCentimeters = echoTime / 58.0;  //calculate the distance in centimeters of the object that reflected the pulse (half the bounce time multiplied by the speed of sound)
-
+  Serial.println(calculatedDistanceCentimeters);
   return calculatedDistanceCentimeters;              //send back the distance that was calculated
 }
 
