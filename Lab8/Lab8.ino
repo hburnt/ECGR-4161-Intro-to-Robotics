@@ -1,19 +1,20 @@
 #include <Servo.h>
 #include "SimpleRSLK.h"
 
-#define DELAY_MS            2000   // delay in milliseconds
-#define LEFT_MOTOR_SPEED     45  // Speed percentage, originally 12
-#define RIGHT_MOTOR_SPEED    36   // Speed percentage, originally 12
-#define LEFT_MOTOR_SPEED_BACK    45 // Speed percentage, originally 12
-#define RIGHT_MOTOR_SPEED_BACK   37   // Speed percentage, originally 12
-#define wheelDiameter       6.999         // in centimeters
-#define cntPerRevolution    360           // Number of encoder (rising) pulses every time the wheel turns completely
-#define DISTANCE    18*2.5       // Distances between doorways converted from inches to cm
-#define DOORS         4
-#define numPings 3
-#define minWallDist 12.00         // Threshold distance to wall (cm)
-const int trigPin = 32;
-const int echoPin = 33;
+#define DELAY_MS                  2000   // delay in milliseconds
+#define LEFT_MOTOR_SPEED          45  // Speed percentage, originally 12
+#define RIGHT_MOTOR_SPEED         36   // Speed percentage, originally 12
+#define LEFT_MOTOR_SPEED_BACK     45 // Speed percentage, originally 12
+#define RIGHT_MOTOR_SPEED_BACK    37   // Speed percentage, originally 12
+#define wheelDiameter             6.999         // in centimeters
+#define cntPerRevolution          360           // Number of encoder (rising) pulses every time the wheel turns completely
+#define DISTANCE                  18*2.5       // Distances between doorways converted from inches to cm
+#define DOORS                     4
+#define numPings                  3
+#define minWallDist               12.00         // Threshold distance to wall (cm)
+const int trigPin =               32;
+const int echoPin =               33;
+
 Servo myservo;  // create servo object to control a servo
                 // a maximum of eight servo objects can be created
 int result[16];            
