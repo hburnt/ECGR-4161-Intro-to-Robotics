@@ -272,16 +272,6 @@ int detectDoor() {
   }
 }
 
-  // Finding the median distance
-  float middleDistance =  pings[(numPings / 2)];
-
-  if(middleDistance > minWallDist){
-    return 1;
-  }else{
-    return 0;
-  }
-}
-
 /* Function Name: getDistance
    Input: None
    Return: float
